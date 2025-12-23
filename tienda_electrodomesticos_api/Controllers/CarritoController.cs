@@ -3,6 +3,7 @@ using tienda_electrodomesticos_api.Models;
 using tienda_electrodomesticos_api.Service.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using tienda_electrodomesticos_api.Models.DTOs;
 
 namespace tienda_electrodomesticos_api.Controllers
 {
@@ -42,10 +43,5 @@ namespace tienda_electrodomesticos_api.Controllers
         }
     }
 
-    // DTO para el POST del carrito
-    public class CarritoRequestDto
-    {
-        public int ProductoId { get; set; }
-        public int UsuarioId { get; set; }
-    }
+
 }
