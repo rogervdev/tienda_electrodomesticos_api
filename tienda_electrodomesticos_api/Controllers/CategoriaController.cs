@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using tienda_electrodomesticos_api.Models;
-using tienda_electrodomesticos_api.Service.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using tienda_electrodomesticos_api.Models;
+using tienda_electrodomesticos_api.Models.DTOs;
+using tienda_electrodomesticos_api.Service.Interfaces;
 
 namespace tienda_electrodomesticos_api.Controllers
 {
@@ -45,31 +46,33 @@ namespace tienda_electrodomesticos_api.Controllers
 
         // POST: api/categoria
         [HttpPost]
-        public async Task<ActionResult<Categoria>> GuardarCategoria([FromBody] Categoria categoria)
+        public async Task<ActionResult<Categoria>> GuardarCategoria([FromForm] CategoriaUploadDto dto)
         {
-            var cat = await _categoriaService.GuardarCategoria(categoria);
+            var categoria = new Categoria
+            {
+                Nombre = dto.Nombre,
+                IsActive = dto.IsActive
+            };
+
+            var cat = await _categoriaService.GuardarCategoria(categoria, dto.Imagen);
             return Ok(cat);
         }
 
+
         // PUT: api/categoria/{id}
         [HttpPut("{id}")]
+        [Consumes("multipart/form-data")]
         public async Task<ActionResult<Categoria>> ActualizarCategoria(
-       int id,
-       [FromBody] Categoria categoria)
+            int id,
+            [FromForm] CategoriaUploadDto dto)
         {
-            if (id != categoria.Id)
-                return BadRequest("El id no coincide");
-
             var catDB = await _categoriaService.ObtenerCategoriaPorId(id);
-            if (catDB == null)
-                return NotFound();
+            if (catDB == null) return NotFound();
 
-            catDB.Nombre = categoria.Nombre;
-            catDB.ImagenNombre = categoria.ImagenNombre;
-            catDB.IsActive = categoria.IsActive;
+            catDB.Nombre = dto.Nombre;
+            catDB.IsActive = dto.IsActive;
 
-            await _categoriaService.ActualizarCategoria(catDB);
-
+            await _categoriaService.ActualizarCategoria(catDB, dto.Imagen);
             return Ok(catDB);
         }
 

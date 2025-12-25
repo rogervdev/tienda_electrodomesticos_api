@@ -60,17 +60,14 @@ namespace tienda_electrodomesticos_api.Controllers
                 Precio = dto.Precio,
                 Stock = dto.Stock,
                 Descuento = dto.Descuento,
-                PrecioConDescuento = dto.PrecioConDescuento,
                 IsActive = dto.IsActive
+                // NO seteamos PrecioConDescuento aquí
             };
 
             var prod = await _productoService.GuardarProducto(producto, dto.Imagen);
             return Ok(prod);
         }
 
-
-
-        // PUT: api/producto/{id}
         [HttpPut]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> ActualizarProducto([FromForm] ProductoUpdateDto dto)
@@ -84,13 +81,17 @@ namespace tienda_electrodomesticos_api.Controllers
                 Precio = dto.Precio,
                 Stock = dto.Stock,
                 Descuento = dto.Descuento,
-                PrecioConDescuento = dto.PrecioConDescuento,
-                IsActive = dto.IsActive
+                IsActive = dto.IsActive,
+
+                // 👇 conservar imagen actual
+                Imagen = dto.Imagen
             };
 
-            await _productoService.ActualizarProducto(producto, dto.Imagen);
+            await _productoService.ActualizarProducto(producto, dto.ImagenFile);
+
             return Ok(producto);
         }
+
 
 
 

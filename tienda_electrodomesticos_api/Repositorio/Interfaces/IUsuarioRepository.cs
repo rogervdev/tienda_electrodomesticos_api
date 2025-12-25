@@ -14,6 +14,8 @@ namespace tienda_electrodomesticos_api.Repositorio.Interfaces
                 Task Agregar(Usuario usuario, string password);
                 Task Actualizar(Usuario usuario);
                 Task Eliminar(int id);
-        
-        }
+              
+
+
+    }
 }

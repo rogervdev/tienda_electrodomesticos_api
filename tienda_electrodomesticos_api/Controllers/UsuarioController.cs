@@ -25,10 +25,11 @@ namespace tienda_electrodomesticos_api.Controllers
                 Nombre = dto.Nombre,
                 Apellido = dto.Apellido,
                 Email = dto.Email,
+                Rol = dto.Rol ?? "ROLE_USER", // si no envías rol, será usuario normal
                 CuentaNoBloqueada = true,
                 IntentoFallido = 0
             };
-
+                
             var registrado = await _usuarioService.RegistrarUsuario(usuario, dto.Password);
             return Ok(registrado);
         }
@@ -91,5 +92,18 @@ namespace tienda_electrodomesticos_api.Controllers
             if (usuario == null) return NotFound();
             return Ok(usuario);
         }
+
+        // POST: api/usuario/login
+        [HttpPost("login")]
+        public async Task<ActionResult<Usuario>> Login([FromBody] UsuarioLoginDto dto)
+        {
+            var usuario = await _usuarioService.Login(dto.Email, dto.Password);
+
+            if (usuario == null)
+                return Unauthorized("Correo o contraseña incorrecta.");
+
+            return Ok(usuario);
+        }
+
     }
 }

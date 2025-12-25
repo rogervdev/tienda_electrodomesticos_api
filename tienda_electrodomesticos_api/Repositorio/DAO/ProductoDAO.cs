@@ -33,7 +33,6 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
             cmd.Parameters.AddWithValue("@stock", producto.Stock);
             cmd.Parameters.AddWithValue("@imagen", producto.Imagen ?? string.Empty);
             cmd.Parameters.AddWithValue("@descuento", producto.Descuento);
-            cmd.Parameters.AddWithValue("@precio_con_descuento", producto.PrecioConDescuento ?? producto.Precio);
             cmd.Parameters.AddWithValue("@is_active", producto.IsActive);
 
             await cmd.ExecuteNonQueryAsync();
@@ -80,7 +79,8 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
                         PrecioConDescuento = (decimal)reader["precio_con_descuento"],
                         Imagen = reader["imagen"] as string,
                         IsActive = (bool)reader["is_active"],
-                        CategoriaId = (int)reader["categoria_id"]
+                        CategoriaId = (int)reader["categoria_id"],
+                        CategoriaNombre = (string)reader["categoria"]
                     };
                 }
             }
@@ -95,7 +95,7 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
 
             using var cmd = new SqlCommand("sp_listar_productos", conn)
             {
-                CommandType = System.Data.CommandType.StoredProcedure
+                CommandType = CommandType.StoredProcedure
             };
 
             using var reader = await cmd.ExecuteReaderAsync();
@@ -112,7 +112,8 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
                     PrecioConDescuento = (decimal)reader["precio_con_descuento"],
                     Imagen = reader["imagen"] as string,
                     IsActive = (bool)reader["is_active"],
-                    CategoriaId = (int)reader["categoria_id"]
+                    CategoriaId = (int)reader["categoria_id"],
+                    CategoriaNombre = (string)reader["categoria"]
                 });
             }
 
@@ -125,7 +126,10 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            using var cmd = new SqlCommand("SELECT * FROM productos WHERE is_active = 1", conn);
+            using var cmd = new SqlCommand("sp_listar_productos_activos", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
 
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -141,12 +145,14 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
                     PrecioConDescuento = (decimal)reader["precio_con_descuento"],
                     Imagen = reader["imagen"] as string,
                     IsActive = (bool)reader["is_active"],
-                    CategoriaId = (int)reader["categoria_id"]
+                    CategoriaId = (int)reader["categoria_id"],
+                    CategoriaNombre = (string)reader["categoria"]
                 });
             }
 
             return lista;
         }
+
 
         public async Task<List<Producto>> ListarPorCategoria(string nombreCategoria)
         {
@@ -173,7 +179,8 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
                     PrecioConDescuento = (decimal)reader["precio_con_descuento"],
                     Imagen = reader["imagen"] as string,
                     IsActive = (bool)reader["is_active"],
-                    CategoriaId = (int)reader["categoria_id"]
+                    CategoriaId = (int)reader["categoria_id"],
+                  
                 });
             }
 
@@ -206,7 +213,8 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
                     PrecioConDescuento = (decimal)reader["precio_con_descuento"],
                     Imagen = reader["imagen"] as string,
                     IsActive = (bool)reader["is_active"],
-                    CategoriaId = (int)reader["categoria_id"]
+                    CategoriaId = (int)reader["categoria_id"],
+              
                 });
             }
 
@@ -228,10 +236,15 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
             cmd.Parameters.AddWithValue("@categoria_id", producto.CategoriaId);
             cmd.Parameters.AddWithValue("@precio", producto.Precio);
             cmd.Parameters.AddWithValue("@stock", producto.Stock);
-            cmd.Parameters.AddWithValue("@imagen",
-                string.IsNullOrEmpty(producto.Imagen) ? DBNull.Value : producto.Imagen);
+            if (!string.IsNullOrEmpty(producto.Imagen))
+            {
+                cmd.Parameters.AddWithValue("@imagen", producto.Imagen);
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@imagen", DBNull.Value);
+            }
             cmd.Parameters.AddWithValue("@descuento", producto.Descuento);
-            cmd.Parameters.AddWithValue("@precio_con_descuento", producto.PrecioConDescuento);
             cmd.Parameters.AddWithValue("@is_active", producto.IsActive);
 
             await cn.OpenAsync();

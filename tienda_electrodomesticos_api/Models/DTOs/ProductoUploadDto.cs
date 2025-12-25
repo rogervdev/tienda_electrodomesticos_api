@@ -12,6 +12,7 @@ namespace tienda_electrodomesticos_api.Models.DTOs
         public int Descuento { get; set; }
         public decimal PrecioConDescuento { get; set; }
         public bool IsActive { get; set; }
+        public string CategoriaNombre { get; set; } = string.Empty;
 
         [FromForm]
         public IFormFile? Imagen { get; set; }

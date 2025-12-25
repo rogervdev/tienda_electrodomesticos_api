@@ -110,5 +110,21 @@ namespace tienda_electrodomesticos_api.Service.Impl
             await _usuarioRepository.Actualizar(usuario);
             return usuario;
         }
+
+        public async Task<Usuario?> Login(string email, string password)
+        {
+            var usuario = await _usuarioRepository.BuscarPorEmail(email);
+            if (usuario == null) return null;
+
+            // Validar contraseña usando BCrypt
+            bool passwordCorrecta = BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash);
+            if (!passwordCorrecta) return null;
+
+            // Opcional: verificar si la cuenta está bloqueada
+            if (!usuario.CuentaNoBloqueada) return null;
+
+            return usuario;
+        }
+
     }
 }

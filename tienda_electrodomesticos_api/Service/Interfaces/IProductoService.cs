@@ -14,6 +14,8 @@
 
         Task<List<Producto>> GetAllActiveProductos(string? categoria = null);
         Task<List<Producto>> BuscarProducto(string filtro);
+
+
     }
 
 }

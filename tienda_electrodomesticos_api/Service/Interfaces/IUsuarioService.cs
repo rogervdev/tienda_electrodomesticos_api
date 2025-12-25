@@ -18,6 +18,9 @@ namespace tienda_electrodomesticos_api.Service.Interfaces
         Task ActualizarResetToken(string email, string resetToken);
         Task<Usuario?> ObtenerPorToken(string token);
         Task<Usuario> ActualizarUsuario(Usuario usuario);
+
+        Task<Usuario?> Login(string email, string password);
+
     }
 
 }

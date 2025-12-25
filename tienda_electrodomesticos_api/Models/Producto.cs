@@ -37,11 +37,13 @@ namespace tienda_electrodomesticos_api.Models
         public int Descuento { get; set; }
 
         [Column("precio_con_descuento", TypeName = "decimal(10,2)")]
-        public decimal? PrecioConDescuento { get; set; }
+        public decimal? PrecioConDescuento { get; set; } = 0;
+
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
-        
+        public string CategoriaNombre { get; set; } = string.Empty;
+
     }
 }

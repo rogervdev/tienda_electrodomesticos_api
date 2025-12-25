@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 namespace tienda_electrodomesticos_api.Models.DTOs
 {
-    
-
     public class ProductoUpdateDto
     {
         public int Id { get; set; }
@@ -14,7 +12,12 @@ namespace tienda_electrodomesticos_api.Models.DTOs
         public int Descuento { get; set; }
         public decimal? PrecioConDescuento { get; set; }
         public bool IsActive { get; set; }
-        public IFormFile? Imagen { get; set; }
-    }
 
+        // 👇 imagen existente
+        public string? Imagen { get; set; }
+
+        // 👇 imagen nueva
+        public IFormFile? ImagenFile { get; set; }
+    }
 }
+

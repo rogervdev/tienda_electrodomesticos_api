@@ -19,16 +19,25 @@ namespace tienda_electrodomesticos_api.Service.Impl
 
         public async Task<Producto> GuardarProducto(Producto producto, IFormFile? imagen = null)
         {
+            // Calcular precio con descuento
+            producto.PrecioConDescuento = CalcularPrecioConDescuento(producto.Precio, producto.Descuento);
+
+            // Guardar imagen si viene
             if (imagen != null && imagen.Length > 0)
             {
-                using var ms = new MemoryStream();
-                await imagen.CopyToAsync(ms);
-                // Aquí solo guardamos el nombre, el archivo puedes guardarlo en disco o nube según tu lógica
-                producto.Imagen = imagen.FileName;
+                var fileName = Path.GetFileName(imagen.FileName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/productos", fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await imagen.CopyToAsync(stream);
+
+                producto.Imagen = fileName;
             }
 
             return await _productoRepository.Guardar(producto);
         }
+
+
 
         public async Task<List<Producto>> GetAllProductos()
         {
@@ -40,9 +49,21 @@ namespace tienda_electrodomesticos_api.Service.Impl
             var producto = await _productoRepository.ObtenerPorId(id);
             if (producto == null) return false;
 
+            // Borrar la imagen física si existe
+            if (!string.IsNullOrEmpty(producto.Imagen))
+            {
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/productos", producto.Imagen);
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+
+            // Borrar el registro de la base de datos
             await _productoRepository.Eliminar(producto);
             return true;
         }
+
 
         public async Task<Producto?> GetProductoById(int id)
         {
@@ -51,16 +72,46 @@ namespace tienda_electrodomesticos_api.Service.Impl
 
         public async Task<Producto?> ActualizarProducto(Producto producto, IFormFile? imagen = null)
         {
+            // 1️⃣ Obtener producto actual
+            var prodDb = await _productoRepository.ObtenerPorId(producto.Id);
+            if (prodDb == null) return null;
+
+            // 2️⃣ Actualizar datos
+            prodDb.Titulo = producto.Titulo;
+            prodDb.Descripcion = producto.Descripcion;
+            prodDb.CategoriaId = producto.CategoriaId;
+            prodDb.Precio = producto.Precio;
+            prodDb.Stock = producto.Stock;
+            prodDb.Descuento = producto.Descuento;
+            prodDb.IsActive = producto.IsActive;
+
+            // 3️⃣ Calcular precio con descuento
+            prodDb.PrecioConDescuento =
+                CalcularPrecioConDescuento(prodDb.Precio, prodDb.Descuento);
+
+            // 4️⃣ SOLO cambiar imagen si hay nueva
             if (imagen != null && imagen.Length > 0)
             {
-                using var ms = new MemoryStream();
-                await imagen.CopyToAsync(ms);
-                producto.Imagen = imagen.FileName;
-            }
+                var fileName = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
+                var filePath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot/images/productos",
+                    fileName
+                );
 
-            await _productoRepository.Actualizar(producto);
-            return producto;
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await imagen.CopyToAsync(stream);
+
+                prodDb.Imagen = fileName;
+            }
+            // ❌ NO tocar prodDb.Imagen si no hay imagen
+
+            // 5️⃣ Guardar
+            await _productoRepository.Actualizar(prodDb);
+            return prodDb;
         }
+
+
 
         public async Task<List<Producto>> GetAllActiveProductos(string? categoria = null)
         {
@@ -75,5 +126,17 @@ namespace tienda_electrodomesticos_api.Service.Impl
         {
             return await _productoRepository.BuscarPorTituloOCategoria(filtro);
         }
+
+        private decimal CalcularPrecioConDescuento(decimal precio, int descuento)
+        {
+            if (descuento <= 0) return precio;
+            if (descuento > 100) descuento = 100;
+
+            return Math.Round(
+                precio - (precio * descuento / 100m),
+                2
+            );
+        }
+
     }
 }

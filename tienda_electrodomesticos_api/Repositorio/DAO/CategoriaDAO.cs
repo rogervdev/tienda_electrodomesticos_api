@@ -111,6 +111,7 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
                 {
                     Id = (int)reader["id"],
                     Nombre = (string)reader["nombre"],
+                    ImagenNombre = reader["imagen_nombre"] as string, // <--- ahora sí se asigna
                     IsActive = true
                 });
             }
@@ -123,7 +124,7 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            using var cmd = new SqlCommand("sp_listar_categorias_combo", conn); // Ya filtra activas
+            using var cmd = new SqlCommand("sp_listar_categorias_combo", conn);
             cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
             using var reader = await cmd.ExecuteReaderAsync();
@@ -133,10 +134,12 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
                 {
                     Id = (int)reader["id"],
                     Nombre = (string)reader["nombre"],
+                    ImagenNombre = reader["imagen_nombre"] as string, // <--- ahora sí se asigna
                     IsActive = true
                 });
             }
             return lista;
         }
+
     }
 }

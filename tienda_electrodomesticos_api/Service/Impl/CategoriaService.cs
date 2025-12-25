@@ -15,16 +15,53 @@
             _categoriaRepository = categoriaRepository;
         }
 
-        public async Task<Categoria> GuardarCategoria(Categoria categoria)
+        public async Task<Categoria> GuardarCategoria(Categoria categoria, IFormFile? imagen = null)
         {
+            if (imagen != null && imagen.Length > 0)
+            {
+                // Generar un nombre único para evitar duplicados
+                var fileName = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
+
+                // Guardar el nombre en la entidad (se guarda en la DB)
+                categoria.ImagenNombre = fileName;
+
+                // Guardar archivo en la carpeta
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/category_img", fileName);
+                using var stream = new FileStream(path, FileMode.Create);
+                await imagen.CopyToAsync(stream);
+            }
+
             await _categoriaRepository.Agregar(categoria);
             return categoria;
         }
 
-        public async Task ActualizarCategoria(Categoria categoria)
+
+        public async Task ActualizarCategoria(Categoria categoria, IFormFile? imagen = null)
         {
-            await _categoriaRepository.Actualizar(categoria);
+            // Obtener la categoría actual de la BD
+            var catDb = await _categoriaRepository.ObtenerPorId(categoria.Id);
+            if (catDb == null) throw new Exception("Categoría no encontrada");
+
+            // Actualizar datos
+            catDb.Nombre = categoria.Nombre;
+            catDb.IsActive = categoria.IsActive;
+
+            // Actualizar imagen solo si hay nueva
+            if (imagen != null && imagen.Length > 0)
+            {
+                var fileName = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/category_img", fileName);
+
+                using var stream = new FileStream(path, FileMode.Create);
+                await imagen.CopyToAsync(stream);
+
+                catDb.ImagenNombre = fileName;
+            }
+
+            await _categoriaRepository.Actualizar(catDb);
         }
+
+
 
 
         public async Task<bool> ExisteCategoria(string nombre)
@@ -42,11 +79,23 @@
             var categoria = await _categoriaRepository.ObtenerPorId(id);
             if (categoria != null)
             {
+                // Borrar la imagen física si existe
+                if (!string.IsNullOrEmpty(categoria.ImagenNombre))
+                {
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/category_img", categoria.ImagenNombre);
+                    if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                }
+
+                // Borrar el registro de la base de datos
                 await _categoriaRepository.Eliminar(categoria);
                 return true;
             }
             return false;
         }
+
 
         public async Task<Categoria?> ObtenerCategoriaPorId(int id)
         {
