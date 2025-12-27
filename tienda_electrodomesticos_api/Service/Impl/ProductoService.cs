@@ -19,9 +19,6 @@ namespace tienda_electrodomesticos_api.Service.Impl
 
         public async Task<Producto> GuardarProducto(Producto producto, IFormFile? imagen = null)
         {
-            // Calcular precio con descuento
-            producto.PrecioConDescuento = CalcularPrecioConDescuento(producto.Precio, producto.Descuento);
-
             // Guardar imagen si viene
             if (imagen != null && imagen.Length > 0)
             {
@@ -34,8 +31,10 @@ namespace tienda_electrodomesticos_api.Service.Impl
                 producto.Imagen = fileName;
             }
 
+            // Guardar producto usando el repositorio / SP
             return await _productoRepository.Guardar(producto);
         }
+
 
 
 
@@ -85,11 +84,7 @@ namespace tienda_electrodomesticos_api.Service.Impl
             prodDb.Descuento = producto.Descuento;
             prodDb.IsActive = producto.IsActive;
 
-            // 3️⃣ Calcular precio con descuento
-            prodDb.PrecioConDescuento =
-                CalcularPrecioConDescuento(prodDb.Precio, prodDb.Descuento);
-
-            // 4️⃣ SOLO cambiar imagen si hay nueva
+            // 3️⃣ SOLO cambiar imagen si hay nueva
             if (imagen != null && imagen.Length > 0)
             {
                 var fileName = Guid.NewGuid() + Path.GetExtension(imagen.FileName);
@@ -106,10 +101,11 @@ namespace tienda_electrodomesticos_api.Service.Impl
             }
             // ❌ NO tocar prodDb.Imagen si no hay imagen
 
-            // 5️⃣ Guardar
+            // 4️⃣ Guardar
             await _productoRepository.Actualizar(prodDb);
             return prodDb;
         }
+
 
 
 

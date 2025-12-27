@@ -15,6 +15,21 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
             _connectionString = connectionString;
         }
 
+        public async Task Eliminar(Carrito carrito)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            using var cmd = new SqlCommand("sp_eliminar_carrito", conn);
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@usuario_id", carrito.UsuarioId);
+            cmd.Parameters.AddWithValue("@producto_id", carrito.ProductoId);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+
         public async Task<Carrito?> BuscarPorProductoYUsuario(int productoId, int usuarioId)
         {
             using var conn = new SqlConnection(_connectionString);
@@ -86,15 +101,29 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            using var cmd = new SqlCommand("sp_insertar_carrito", conn);
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-
-            cmd.Parameters.AddWithValue("@usuario_id", carrito.UsuarioId);
-            cmd.Parameters.AddWithValue("@producto_id", carrito.ProductoId);
-            cmd.Parameters.AddWithValue("@cantidad", carrito.Cantidad);
+            SqlCommand cmd;
+            if (carrito.Id == 0)
+            {
+                // Nuevo registro
+                cmd = new SqlCommand("sp_insertar_carrito", conn);
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@usuario_id", carrito.UsuarioId);
+                cmd.Parameters.AddWithValue("@producto_id", carrito.ProductoId);
+                cmd.Parameters.AddWithValue("@cantidad", carrito.Cantidad);
+            }
+            else
+            {
+                // Actualizar registro existente
+                cmd = new SqlCommand("sp_actualizar_carrito", conn);
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@id", carrito.Id);
+                cmd.Parameters.AddWithValue("@cantidad", carrito.Cantidad);
+            }
 
             await cmd.ExecuteNonQueryAsync();
         }
+
+
 
     }
 }

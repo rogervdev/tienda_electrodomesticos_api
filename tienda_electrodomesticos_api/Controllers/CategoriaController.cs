@@ -27,6 +27,14 @@ namespace tienda_electrodomesticos_api.Controllers
             return Ok(categorias);
         }
 
+        [HttpGet("todas")]
+        public async Task<ActionResult<List<Categoria>>> GetAllCategoriasTodas()
+        {
+            var categorias = await _categoriaService.GetAllCategoriasTodas();
+            return Ok(categorias);
+        }
+
+
         // GET: api/categoria/activos
         [HttpGet("activos")]
         public async Task<ActionResult<List<Categoria>>> GetAllActiveCategorias()

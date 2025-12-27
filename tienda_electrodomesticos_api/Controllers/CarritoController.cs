@@ -41,7 +41,33 @@ namespace tienda_electrodomesticos_api.Controllers
             var cantidad = await _carritoService.ContarCarrito(usuarioId);
             return Ok(cantidad);
         }
+
+        // DELETE: api/carrito/{usuarioId}/{productoId}
+        [HttpDelete("{usuarioId}/{productoId}")]
+        public async Task<ActionResult> EliminarProducto(int usuarioId, int productoId)
+        {
+            var eliminado = await _carritoService.EliminarProducto(usuarioId, productoId);
+            if (eliminado)
+                return Ok(new { mensaje = "Producto eliminado del carrito." });
+            else
+                return NotFound(new { mensaje = "No se encontró el producto en el carrito." });
+        }
+
+        // PUT api/carrito/aumentar/{usuarioId}/{productoId}
+        [HttpPut("aumentar/{usuarioId}/{productoId}")]
+        public async Task<ActionResult> AumentarCantidad(int usuarioId, int productoId)
+        {
+            var exito = await _carritoService.AumentarCantidad(usuarioId, productoId);
+            return exito ? Ok() : NotFound();
+        }
+
+        // PUT api/carrito/disminuir/{usuarioId}/{productoId}
+        [HttpPut("disminuir/{usuarioId}/{productoId}")]
+        public async Task<ActionResult> DisminuirCantidad(int usuarioId, int productoId)
+        {
+            var exito = await _carritoService.DisminuirCantidad(usuarioId, productoId);
+            return exito ? Ok() : NotFound();
+        }
+
     }
-
-
 }

@@ -16,23 +16,13 @@ namespace tienda_electrodomesticos_api.Controllers
             _usuarioService = usuarioService;
         }
 
-        // POST: api/usuario/registrar
         [HttpPost("registrar")]
         public async Task<ActionResult<Usuario>> RegistrarUsuario([FromBody] UsuarioRegistrarDto dto)
         {
-            var usuario = new Usuario
-            {
-                Nombre = dto.Nombre,
-                Apellido = dto.Apellido,
-                Email = dto.Email,
-                Rol = dto.Rol ?? "ROLE_USER", // si no envías rol, será usuario normal
-                CuentaNoBloqueada = true,
-                IntentoFallido = 0
-            };
-                
-            var registrado = await _usuarioService.RegistrarUsuario(usuario, dto.Password);
+            var registrado = await _usuarioService.RegistrarUsuario(dto);
             return Ok(registrado);
         }
+
 
         // GET: api/usuario/email?email=correo@dominio.com
         [HttpGet("email")]

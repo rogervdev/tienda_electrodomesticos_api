@@ -1,10 +1,11 @@
-﻿using System;
+﻿using BCrypt.Net;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using tienda_electrodomesticos_api.Models;
+using tienda_electrodomesticos_api.Models.DTOs;
 using tienda_electrodomesticos_api.Repositorio.Interfaces;
 using tienda_electrodomesticos_api.Service.Interfaces;
-using BCrypt.Net;
 
 namespace tienda_electrodomesticos_api.Service.Impl
 {
@@ -17,15 +18,24 @@ namespace tienda_electrodomesticos_api.Service.Impl
             _usuarioRepository = usuarioRepository;
         }
 
-        public async Task<Usuario> RegistrarUsuario(Usuario usuario, string password)
+        public async Task<Usuario> RegistrarUsuario(UsuarioRegistrarDto dto)
         {
-            usuario.Rol = "ROLE_USER";
-            usuario.CuentaNoBloqueada = true;
-            usuario.IntentoFallido = 0;
+            var usuario = new Usuario
+            {
+                Nombre = dto.Nombre,
+                Apellido = dto.Apellido,
+                Email = dto.Email,
+                Rol = string.IsNullOrEmpty(dto.Rol) ? "ROLE_USER" : dto.Rol, // <- aquí
+                CuentaNoBloqueada = true,
+                IntentoFallido = 0
+            };
 
-            await _usuarioRepository.Agregar(usuario, password);
+            // Asignar la contraseña usando tu repositorio
+            await _usuarioRepository.Agregar(usuario, dto.Password);
+
             return usuario;
         }
+
 
         public async Task<Usuario?> ObtenerPorEmail(string email)
         {
@@ -47,10 +57,13 @@ namespace tienda_electrodomesticos_api.Service.Impl
             var usuario = await _usuarioRepository.ObtenerPorId(id);
             if (usuario == null) return false;
 
-            usuario.CuentaNoBloqueada = estado;
+            // ✅ Activar o desactivar usuario desde panel de administración
+            usuario.IsEnable = estado;
+
             await _usuarioRepository.Actualizar(usuario);
             return true;
         }
+
 
         public async Task IncrementarIntentoFallido(Usuario usuario)
         {
@@ -114,17 +127,55 @@ namespace tienda_electrodomesticos_api.Service.Impl
         public async Task<Usuario?> Login(string email, string password)
         {
             var usuario = await _usuarioRepository.BuscarPorEmail(email);
-            if (usuario == null) return null;
+            if (usuario == null)
+                return null;
 
-            // Validar contraseña usando BCrypt
+            // 1️⃣ Deshabilitado por el admin
+            if (!usuario.IsEnable)
+                return null;
+
+            // 2️⃣ Bloqueo por intentos fallidos
+            if (!usuario.CuentaNoBloqueada && usuario.LockTime != null)
+            {
+                // ⏱️ desbloqueo automático después de 20 segundos
+                if (DateTime.UtcNow >= usuario.LockTime.Value.AddSeconds(20))
+                {
+                    usuario.CuentaNoBloqueada = true;
+                    usuario.IntentoFallido = 0;
+                    usuario.LockTime = null;
+                    await _usuarioRepository.Actualizar(usuario);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            // 3️⃣ Validar contraseña
             bool passwordCorrecta = BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash);
-            if (!passwordCorrecta) return null;
+            if (!passwordCorrecta)
+            {
+                usuario.IntentoFallido++;
 
-            // Opcional: verificar si la cuenta está bloqueada
-            if (!usuario.CuentaNoBloqueada) return null;
+                if (usuario.IntentoFallido >= 3)
+                {
+                    usuario.CuentaNoBloqueada = false;
+                    usuario.LockTime = DateTime.UtcNow;
+                }
+
+                await _usuarioRepository.Actualizar(usuario);
+                return null;
+            }
+
+            // 4️⃣ Login correcto → reset
+            usuario.IntentoFallido = 0;
+            usuario.LockTime = null;
+            await _usuarioRepository.Actualizar(usuario);
 
             return usuario;
         }
+
+
 
     }
 }

@@ -74,6 +74,12 @@
             return await _categoriaRepository.ListarTodas();
         }
 
+        public async Task<List<Categoria>> GetAllCategoriasTodas()
+        {
+            return await _categoriaRepository.ListarTodasCategorias();
+        }
+
+
         public async Task<bool> EliminarCategoria(int id)
         {
             var categoria = await _categoriaRepository.ObtenerPorId(id);

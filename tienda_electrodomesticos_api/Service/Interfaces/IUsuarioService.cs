@@ -1,10 +1,11 @@
 ﻿using tienda_electrodomesticos_api.Models;
+using tienda_electrodomesticos_api.Models.DTOs;
 
 namespace tienda_electrodomesticos_api.Service.Interfaces
 {
     public interface IUsuarioService
     {
-        Task<Usuario> RegistrarUsuario(Usuario usuario, string password);
+        Task<Usuario> RegistrarUsuario(UsuarioRegistrarDto dto);
         Task<Usuario?> ObtenerPorEmail(string email);
         Task<bool> ExistePorEmail(string email);
         Task<List<Usuario>> ListarUsuariosPorRol(string rol);

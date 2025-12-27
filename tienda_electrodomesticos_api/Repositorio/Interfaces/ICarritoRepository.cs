@@ -8,6 +8,8 @@ namespace tienda_electrodomesticos_api.Repositorio.Interfaces
         Task<int> ContarPorUsuario(int usuarioId);
         Task<List<Carrito>> ListarPorUsuario(int usuarioId);
         Task Guardar(Carrito carrito);
+        Task Eliminar(Carrito carrito);
+
     }
 
 

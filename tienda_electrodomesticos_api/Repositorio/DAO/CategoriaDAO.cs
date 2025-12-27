@@ -118,6 +118,30 @@ namespace tienda_electrodomesticos_api.Repositorio.DAO
             return lista;
         }
 
+        public async Task<List<Categoria>> ListarTodasCategorias()
+        {
+            var lista = new List<Categoria>();
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            using var cmd = new SqlCommand("sp_listar_categorias_todas", conn);
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new Categoria
+                {
+                    Id = (int)reader["id"],
+                    Nombre = (string)reader["nombre"],
+                    ImagenNombre = reader["imagen_nombre"] as string,
+                    IsActive = (bool)reader["is_active"] // ahora toma el valor real
+                });
+            }
+            return lista;
+        }
+
+
         public async Task<List<Categoria>> ListarActivas()
         {
             var lista = new List<Categoria>();
